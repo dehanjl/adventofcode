@@ -1,5 +1,10 @@
 # General
 input.txt
+out/
 
 # Golang
 *.exe
+
+# Kotlin
+.idea/
+*.iml
