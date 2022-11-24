@@ -8,15 +8,9 @@ fun part1(input: List<Command>): Int {
 
     input.forEach { (direction, amount) ->
         when (direction) {
-            "forward" -> {
-                x += amount
-            }
-            "down" -> {
-                depth += amount
-            }
-            "up" -> {
-                depth -= amount
-            }
+            "forward" -> x += amount
+            "down" -> depth += amount
+            "up" -> depth -= amount
         }
     }
 
@@ -34,14 +28,8 @@ fun part2(input: List<Command>): Int {
                 x += amount
                 depth += aim * amount
             }
-            "down" -> {
-//                depth += amount
-                aim += amount
-            }
-            "up" -> {
-//                depth -= amount
-                aim -= amount
-            }
+            "down" -> aim += amount
+            "up" -> aim -= amount
         }
     }
 
