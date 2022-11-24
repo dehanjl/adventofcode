@@ -1,5 +1,5 @@
 # General
-input.txt
+*.txt
 out/
 
 # Golang
@@ -8,3 +8,7 @@ out/
 # Kotlin
 .idea/
 *.iml
+
+# Rust
+target/
+Cargo.lock
