@@ -3,23 +3,6 @@ use std::{
     io::{prelude::*, BufReader},
 };
 
-#[derive(Clone, Debug)]
-enum Common {
-    ZERO,
-    ONE,
-    EQUAL(u32),
-}
-
-impl Common {
-    fn value(&self) -> u32 {
-        match self {
-            Common::ZERO => 0,
-            Common::ONE => 1,
-            Common::EQUAL(x) => *x,
-        }
-    }
-}
-
 fn read_file(filepath: &str) -> Vec<Vec<u32>> {
     let file = File::open(filepath).expect("File not found");
     let reader = BufReader::new(file);
@@ -36,71 +19,34 @@ fn read_file(filepath: &str) -> Vec<Vec<u32>> {
 }
 
 fn count_bits(input: &Vec<Vec<u32>>) -> Vec<(u32, u32)> {
-    let inner_len = input[0].len();
-    let mut counts = vec![(0, 0); inner_len];
+    let mut counts = vec![(0, 0); input[0].len()];
 
-    for i in 0..inner_len {
-        let (mut zero_count, mut one_count) = (0, 0);
-
-        input.iter().for_each(|line| match line[i] {
-            0 => zero_count += 1,
-            1 => one_count += 1,
-            _ => panic!("Invalid input"),
-        });
-
-        counts[i] = (zero_count, one_count);
+    for i in 0..input[0].len() {
+        counts[i] = input
+            .iter()
+            .fold((0, 0), |(zero_count, one_count), line| match line[i] {
+                0 => (zero_count + 1, one_count),
+                1 => (zero_count, one_count + 1),
+                _ => (zero_count, one_count),
+            });
     }
 
     counts
-}
-
-fn most_common_bits(input: &Vec<Vec<u32>>) -> Vec<Common> {
-    let counts = count_bits(input);
-    let inner_len = counts.len();
-    let mut most_common = vec![Common::EQUAL(1); inner_len];
-
-    for i in 0..inner_len {
-        let (zero_count, one_count) = counts[i];
-
-        most_common[i] = if zero_count > one_count {
-            Common::ZERO
-        } else if zero_count < one_count {
-            Common::ONE
-        } else {
-            Common::EQUAL(1)
-        };
-    }
-
-    most_common
-}
-
-fn least_common_bits(input: &Vec<Vec<u32>>) -> Vec<Common> {
-    let counts = count_bits(input);
-    let inner_len = counts.len();
-    let mut least_common = vec![Common::EQUAL(0); inner_len];
-
-    for i in 0..inner_len {
-        let (zero_count, one_count) = counts[i];
-
-        least_common[i] = if zero_count < one_count {
-            Common::ZERO
-        } else if zero_count > one_count {
-            Common::ONE
-        } else {
-            Common::EQUAL(0)
-        };
-    }
-
-    least_common
 }
 
 fn part1(input: &Vec<Vec<u32>>) -> u32 {
     let inner_len = input[0].len();
     let mask: u32 = (1 << inner_len) - 1;
 
-    let gamma = most_common_bits(input)
+    let gamma = count_bits(input)
         .iter()
-        .map(|b| b.value())
+        .map(|(zero_count, one_count)| {
+            if *one_count >= *zero_count {
+                1
+            } else {
+                0
+            }
+        } as u32)
         .fold(0, |acc, bit| acc << 1 | bit);
 
     let epsilon = gamma ^ mask; // epsilon is the flipped value of gamma
@@ -110,24 +56,15 @@ fn part1(input: &Vec<Vec<u32>>) -> u32 {
     gamma * epsilon
 }
 
-fn determine_rating(
-    input: &Vec<Vec<u32>>,
-    mask_common_func: fn(&Vec<Vec<u32>>) -> Vec<Common>,
-) -> u32 {
+fn determine_rating(input: &Vec<Vec<u32>>, mask_fn: fn(&Vec<Vec<u32>>) -> Vec<u32>) -> u32 {
     let inner_len = input[0].len();
 
     let mut vec = input.clone();
 
     // filter the values in the input based on the most or least common bit
     for i in 0..inner_len {
-        let mask = mask_common_func(&vec);
-
-        vec = vec
-            .into_iter()
-            .filter(|p| p[i] == mask[i].value())
-            .collect();
-
-        // println!("i={} Mask={} Vec: {:?}", i, mask[i].value(), vec);
+        let mask = mask_fn(&vec);
+        vec = vec.into_iter().filter(|p| p[i] == mask[i]).collect();
 
         if vec.len() == 1 {
             break;
@@ -141,15 +78,40 @@ fn determine_rating(
 }
 
 fn part2(input: &Vec<Vec<u32>>) -> u32 {
-    let ox_rating = determine_rating(input, most_common_bits);
-    let co_rating = determine_rating(input, least_common_bits);
+    let ox_rating = determine_rating(input, |mask_in: &Vec<Vec<u32>>| {
+        count_bits(mask_in)
+            .iter()
+            .map(
+                |(zero_count, one_count)| {
+                    if *one_count >= *zero_count {
+                        1
+                    } else {
+                        0
+                    }
+                },
+            )
+            .collect()
+    });
+    let co_rating = determine_rating(input, |mask_in: &Vec<Vec<u32>>| {
+        count_bits(mask_in)
+            .iter()
+            .map(
+                |(zero_count, one_count)| {
+                    if *zero_count > *one_count {
+                        1
+                    } else {
+                        0
+                    }
+                },
+            )
+            .collect()
+    });
 
     ox_rating * co_rating
 }
 
 fn main() {
     let input = read_file("input.txt");
-    println!("Most Common:: {:?}", most_common_bits(&input));
 
     println!("Part 1: {:?}", part1(&input));
     println!("Part 2: {:?}", part2(&input));
