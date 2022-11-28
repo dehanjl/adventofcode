@@ -36,8 +36,8 @@ fn get_cols(board: &Board) -> Vec<Vec<(u32, bool)>> {
 fn print_board(board: &Board) {
     let rows = get_rows(board);
     for row in rows {
-        for (num, _) in row {
-            print!("{} ", num);
+        for (num, sel) in row {
+            print!("{:1}{:2} ", if sel { '*' } else { ' ' }, num);
         }
         println!();
     }
