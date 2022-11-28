@@ -34,19 +34,21 @@ fn count_bits(input: &Vec<Vec<u32>>) -> Vec<(u32, u32)> {
     counts
 }
 
+fn most_common(counts: &(u32, u32)) -> u32 {
+    if counts.1 >= counts.0 {
+        1
+    } else {
+        0
+    }
+}
+
 fn part1(input: &Vec<Vec<u32>>) -> u32 {
     let inner_len = input[0].len();
     let mask: u32 = (1 << inner_len) - 1;
 
     let gamma = count_bits(input)
         .iter()
-        .map(|(zero_count, one_count)| {
-            if *one_count >= *zero_count {
-                1
-            } else {
-                0
-            }
-        } as u32)
+        .map(most_common)
         .fold(0, |acc, bit| acc << 1 | bit);
 
     let epsilon = gamma ^ mask; // epsilon is the flipped value of gamma
@@ -79,31 +81,13 @@ fn determine_rating(input: &Vec<Vec<u32>>, mask_fn: fn(&Vec<Vec<u32>>) -> Vec<u3
 
 fn part2(input: &Vec<Vec<u32>>) -> u32 {
     let ox_rating = determine_rating(input, |mask_in: &Vec<Vec<u32>>| {
-        count_bits(mask_in)
-            .iter()
-            .map(
-                |(zero_count, one_count)| {
-                    if *one_count >= *zero_count {
-                        1
-                    } else {
-                        0
-                    }
-                },
-            )
-            .collect()
+        count_bits(mask_in).iter().map(most_common).collect()
     });
     let co_rating = determine_rating(input, |mask_in: &Vec<Vec<u32>>| {
         count_bits(mask_in)
             .iter()
-            .map(
-                |(zero_count, one_count)| {
-                    if *zero_count > *one_count {
-                        1
-                    } else {
-                        0
-                    }
-                },
-            )
+            .map(most_common)
+            .map(|x| x ^ 1)
             .collect()
     });
 
