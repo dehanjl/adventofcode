@@ -1,6 +1,9 @@
+extern crate nalgebra as na;
+
+use na::Matrix5;
 use std::fs::{self};
 
-type Board = Vec<(u32, bool)>;
+type Board = Matrix5<u32>;
 
 fn read_numbers(filename: &str) -> Vec<u32> {
     fs::read_to_string(filename)
@@ -14,34 +17,26 @@ fn read_numbers(filename: &str) -> Vec<u32> {
 fn read_boards(raw_numbers: Vec<u32>) -> Vec<Board> {
     raw_numbers
         .chunks(25)
-        .map(|c| c.to_vec().iter().map(|f| (*f, false)).collect())
+        .map(|chunk| Matrix5::from_vec(chunk.to_vec()).transpose())
         .collect()
 }
 
-fn get_rows(board: &Board) -> Vec<Vec<(u32, bool)>> {
-    board.chunks(5).map(|c| c.to_vec()).collect()
-}
-
-fn get_cols(board: &Board) -> Vec<Vec<(u32, bool)>> {
-    (0..5)
-        .map(|col| {
-            (0..25)
-                .step_by(5)
-                .map(|row| board[row + col])
-                .collect::<Vec<(u32, bool)>>()
-        })
-        .collect::<Vec<Vec<(u32, bool)>>>()
-}
-
 fn print_board(board: &Board) {
-    let rows = get_rows(board);
-    for row in rows {
-        for (num, sel) in row {
-            print!("{:1}{:2} ", if sel { '*' } else { ' ' }, num);
+    for row in board.row_iter() {
+        for n in row.iter() {
+            print!("{:2} ", n);
         }
         println!();
     }
     println!();
+}
+
+fn check(board: &Board, nums: &[u32]) {
+    // check rows
+    for row in board.row_iter() {
+        let x = row.iter().filter(|n| nums.contains(*n)).count();
+        println!("row: {}", x);
+    }
 }
 
 fn main() {
@@ -49,4 +44,5 @@ fn main() {
 
     let boards = read_boards(read_numbers("boards_example.txt"));
     boards.iter().for_each(print_board);
+    boards.iter().for_each(|b| check(b, &[22, 13, 17, 11, 0]));
 }
