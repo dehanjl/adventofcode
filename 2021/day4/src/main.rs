@@ -21,16 +21,6 @@ fn read_boards(raw_numbers: Vec<u32>) -> Vec<Board> {
         .collect()
 }
 
-fn print_board(board: &Board) {
-    for row in board.row_iter() {
-        for n in row.iter() {
-            print!("{:2} ", n);
-        }
-        println!();
-    }
-    println!();
-}
-
 fn check(board: &Board, nums: &[u32]) -> bool {
     // check rows
     board
@@ -57,8 +47,26 @@ fn part1() {
     for (i, val) in numbers.iter().enumerate() {
         for (_, board) in boards.iter().enumerate() {
             if check(board, &numbers[0..=i]) {
-                let winning_numer = get_unmarked(board, &numbers[0..=i]).iter().sum::<u32>() * val;
-                println!("Part 1: {}", winning_numer);
+                let winning_number = get_unmarked(board, &numbers[0..=i]).iter().sum::<u32>() * val;
+                println!("Part 1: {}", winning_number);
+                return;
+            }
+        }
+    }
+}
+
+fn part2() {
+    let numbers = read_numbers("input_numbers.txt");
+    let mut boards = read_boards(read_numbers("input_boards.txt"));
+
+    for (i, val) in numbers.iter().enumerate() {
+        if boards.len() > 1 {
+            boards.retain(|board| !check(board, &numbers[0..=i])); // keep only boards that don't win
+        } else {
+            let board = &boards[0];
+            if check(board, &numbers[0..=i]) {
+                let winning_number = get_unmarked(board, &numbers[0..=i]).iter().sum::<u32>() * val;
+                println!("Part 2: {}", winning_number);
                 return;
             }
         }
@@ -67,4 +75,15 @@ fn part1() {
 
 fn main() {
     part1();
+    part2();
+}
+
+fn print_board(board: &Board) {
+    for row in board.row_iter() {
+        for n in row.iter() {
+            print!("{:2} ", n);
+        }
+        println!();
+    }
+    println!();
 }
