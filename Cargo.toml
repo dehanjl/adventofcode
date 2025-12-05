@@ -1,0 +1,30 @@
+[package]
+name = "adventofcode"
+version = "0.2.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sscanf = "0.4.4"
+itertools = "0.14.0"
+hashbrown = "0.16.1"
+fnv = "1.0.7"
+indexmap = "2.12.1"
+regex = "1.12.2"
+num = "0.4.3"
+nalgebra = "0.34.1"
+grid = "1.0.0"
+priority-queue = "2.7.0"
+serde_json = "1.0.145"
+rayon = "1.11.0"
+cached = "0.56.0"
+indicatif = { version = "0.18.3", features = ["rayon"] }
+anyhow = "1.0.100"
+reqwest = { version = "0.12.24", features = ["blocking"] }
+clap = { version = "4.5.53", features = ["derive"] }
+dashmap = "6.1.0"
+inventory = "0.3"
+dotenvy = "0.15"
+automod = "1"
+tabled = "0.20.0"
