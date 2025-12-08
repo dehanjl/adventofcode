@@ -103,6 +103,10 @@ pub struct Opt {
     /// List all available solutions
     #[arg(long)]
     pub list: bool,
+
+    /// Scaffold a new day solution file instead of running
+    #[arg(long)]
+    pub new: bool,
 }
 
 impl Opt {
@@ -136,11 +140,14 @@ pub fn runner(f: SolutionFn, input: &str) {
 pub fn get_input_for_day(opt: &Opt, year: u16, day: u8) -> Result<String> {
     let path = make_path(year, day, opt);
 
-    match (path.exists(), opt.real) {
-        (true, _) => fs::read_to_string(path).map_err(anyhow::Error::from),
+    let content = match (path.exists(), opt.real) {
+        (true, _) => fs::read_to_string(path)?,
         (false, false) => anyhow::bail!("Example input not found: {}", path.display()),
-        (false, true) => download_and_save(opt, path, year, day),
-    }
+        (false, true) => download_and_save(opt, path, year, day)?,
+    };
+
+    // Normalize line endings (CRLF -> LF)
+    Ok(content.replace("\r\n", "\n"))
 }
 
 fn make_path(year: u16, day: u8, opt: &Opt) -> PathBuf {
