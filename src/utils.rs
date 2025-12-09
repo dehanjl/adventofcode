@@ -119,6 +119,8 @@ pub trait GridUtils<T> {
     fn find_set<P>(&self, predicate: P) -> HashSet<Loc>
     where
         P: Fn(&T) -> bool;
+
+    fn get_loc(&self, loc: &Loc) -> Option<&T>;
 }
 
 impl<T> GridUtils<T> for Grid<T>
@@ -152,5 +154,13 @@ where
             .positions(predicate)
             .map(|i| (i / self.cols(), i % self.cols()).into())
             .collect()
+    }
+
+    fn get_loc(&self, loc: &Loc) -> Option<&T> {
+        if loc.in_bounds((self.rows(), self.cols())) {
+            Some(self.get(loc.0 as usize, loc.1 as usize).unwrap())
+        } else {
+            None
+        }
     }
 }
