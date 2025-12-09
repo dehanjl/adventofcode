@@ -186,13 +186,13 @@ fn make_day_template(year: u16, day: u8) -> String {
              println!(\"Day {day} Part 1: {{}}\", \"TODO\");\n\
          }}\n\
          \n\
-         fn part2(input: &str) {{\n\
+         fn _part2(input: &str) {{\n\
              let _data = parse_input(input);\n\
              // TODO: solve part 2\n\
              println!(\"Day {day} Part 2: {{}}\", \"TODO\");\n\
          }}\n\
          \n\
-         register_day!({year}, {day}, part1, part2);\n",
+         register_day!({year}, {day}, part1);\n",
         year = year,
         day = day
     )
