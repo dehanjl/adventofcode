@@ -18,3 +18,5 @@ inputs/*/real/day*.txt
 
 # Environment file with secrets
 .env
+
+**/__pycache__/
