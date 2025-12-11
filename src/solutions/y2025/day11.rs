@@ -4,6 +4,7 @@ use crate::register_day;
 use std::collections::VecDeque;
 
 struct Node {
+    #[allow(dead_code)]
     id: String,
     outgoing: Vec<String>,
     incoming: Vec<String>,

@@ -1,9 +1,12 @@
+use hashbrown::HashSet;
 use indicatif::ParallelProgressIterator;
 use indicatif::ProgressIterator;
+use priority_queue::PriorityQueue;
 use std::collections::VecDeque;
 
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use std::cmp::Reverse;
 
 use crate::register_day;
 
@@ -64,11 +67,13 @@ impl Machine {
     }
 }
 
+#[allow(dead_code)]
 /// Toggles the bit at position `pos` in the integer `n`.
 fn toggle_bit(n: u32, pos: u32) -> u32 {
     n ^ (1 << pos)
 }
 
+#[allow(dead_code)]
 /// Sets the bit at position `pos` in the integer `n`.
 fn set_bit(n: u32, pos: u32) -> u32 {
     n | (1 << pos)
@@ -93,20 +98,24 @@ fn part1(input: &str) {
     let machines = parse_input(input);
 
     let sum = machines
-        .par_iter()
+        .iter()
         .map(|machine| {
             // state, presses
             let mut q: VecDeque<(u32, u32)> =
                 machine.buttons.iter().map(|b| (b.value, 1)).collect();
+            let mut visited: HashSet<u32> = q.iter().map(|(s, _)| *s).collect();
+
             loop {
                 let (state, presses) = q.pop_front().unwrap();
                 if state == machine.target {
                     return presses;
                 }
-                machine
-                    .buttons
-                    .iter()
-                    .for_each(|b| q.push_back((state ^ b.value, presses + 1)));
+                machine.buttons.iter().for_each(|b| {
+                    let next_state = state ^ b.value;
+                    if visited.insert(next_state) {
+                        q.push_back((next_state, presses + 1));
+                    }
+                });
             }
         })
         .sum::<u32>();
@@ -114,6 +123,7 @@ fn part1(input: &str) {
     println!("Day 10 Part 1: {}", sum);
 }
 
+#[allow(dead_code)]
 fn bump_counter(mut counter: Vec<u32>, idxs: &[u32]) -> Vec<u32> {
     for &i in idxs {
         unsafe {
@@ -123,34 +133,52 @@ fn bump_counter(mut counter: Vec<u32>, idxs: &[u32]) -> Vec<u32> {
     counter
 }
 
-fn part2(input: &str) {
+#[allow(dead_code)]
+fn chebyshev_distance(a: &[u32], b: &[u32]) -> u32 {
+    a.iter()
+        .zip(b.iter())
+        .map(|(&x, &y)| x.abs_diff(y))
+        .max()
+        .unwrap_or(0)
+}
+
+#[allow(dead_code)]
+fn manhattan_distance(a: &[u32], b: &[u32]) -> u32 {
+    a.iter().zip(b.iter()).map(|(&x, &y)| x.abs_diff(y)).sum()
+}
+
+fn _part2(input: &str) {
     let machines = parse_input(input);
 
     let sum = machines
         .iter()
         .progress()
         .map(|machine| {
-            // state, presses
-            let mut q: VecDeque<(Vec<u32>, u32)> = machine
-                .buttons
-                .iter()
-                .map(|b| {
-                    (
-                        bump_counter(vec![0; machine.joltages.len()], &b.positions),
-                        1,
-                    )
-                })
-                .collect();
+            // (state, presses), presses + distance estimate
+            let mut pq = PriorityQueue::new();
+            let mut visited: HashSet<Vec<u32>> = HashSet::new();
+            for b in &machine.buttons {
+                let state = bump_counter(vec![0; machine.joltages.len()], &b.positions);
+                let priority = 1 + manhattan_distance(&state, &machine.joltages);
+                visited.insert(state.clone());
+                pq.push((state, 1), Reverse(priority));
+            }
+
             loop {
-                let (state, presses) = q.pop_front().unwrap();
+                let ((state, presses), Reverse(_)) = pq.pop().unwrap();
+
                 if state == machine.joltages {
-                    return presses;
+                    return presses; // we've reached the target
                 }
                 if state.iter().zip(&machine.joltages).any(|(a, b)| a > b) {
-                    continue;
+                    continue; // we've overshot the target
                 }
                 machine.buttons.iter().for_each(|b| {
-                    q.push_back((bump_counter(state.clone(), &b.positions), presses + 1))
+                    let next_state = bump_counter(state.clone(), &b.positions);
+                    let priority = presses + 1 + manhattan_distance(&next_state, &machine.joltages);
+                    if visited.insert(next_state.clone()) {
+                        pq.push((next_state, presses + 1), Reverse(priority));
+                    }
                 });
             }
         })
@@ -159,4 +187,4 @@ fn part2(input: &str) {
     println!("Day 10 Part 2: {}", sum);
 }
 
-register_day!(2025, 10, part1, part2);
+register_day!(2025, 10, part1);
