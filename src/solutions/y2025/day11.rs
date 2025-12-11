@@ -88,37 +88,46 @@ fn topo_sort(graph: &Graph) -> Vec<String> {
     sorted
 }
 
-fn part1(input: &str) {
-    let graph = parse_input(input);
-    let sorted = topo_sort(&graph);
-
+fn count_paths(graph: &Graph, sorted: &Vec<String>, start: &str, end: &str) -> u64 {
     let mut ways: HashMap<String, u64> = graph.keys().map(|id| (id.clone(), 0u64)).collect();
-    ways.insert("you".to_string(), 1);
+    ways.insert(start.to_string(), 1);
 
     for node_id in sorted {
-        let count = ways[&node_id];
-        for neighbor in &graph[&node_id].outgoing {
+        let count = ways[node_id];
+        for neighbor in &graph[node_id].outgoing {
             *ways.get_mut(neighbor).unwrap() += count;
         }
     }
 
-    println!("Day 11 Part 1: {}", ways.get(&("out".to_string())).unwrap());
+    ways.get(end).cloned().unwrap_or(0)
+}
+
+fn part1(input: &str) {
+    let graph = parse_input(input);
+    let sorted = topo_sort(&graph);
+
+    let paths = count_paths(&graph, &sorted, "you", "out");
+
+    println!("Day 11 Part 1: {}", paths);
 }
 
 fn part2(input: &str) {
     let graph = parse_input(input);
     let sorted = topo_sort(&graph);
 
-    let mut ways: HashMap<String, u64> = graph.keys().map(|id| (id.clone(), 0u64)).collect();
-    ways.insert("svr".to_string(), 1);
+    let prod = |path: &[(&str, &str)]| -> u64 {
+        path.iter()
+            .map(|(a, b)| count_paths(&graph, &sorted, a, b))
+            .product()
+    };
 
-    for node_id in sorted {
-        let count = ways[&node_id];
-        for neighbor in &graph[&node_id].outgoing {
-            *ways.get_mut(neighbor).unwrap() += count;
-        }
-    }
-    println!("Day 11 Part 2: {}", ways.get(&("out".to_string())).unwrap());
+    // path type 1: svr -> dac -> fft -> ou
+    let c1: u64 = prod(&[("svr", "dac"), ("dac", "fft"), ("fft", "out")]);
+
+    // path type 2: svr -> fft -> dac -> out
+    let c2: u64 = prod(&[("svr", "fft"), ("fft", "dac"), ("dac", "out")]);
+
+    println!("Day 11 Part 2: {}", c1 + c2);
 }
 
 register_day!(2025, 11, part1, part2);
