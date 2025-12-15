@@ -1,16 +1,10 @@
 use hashbrown::HashSet;
-use indicatif::ParallelProgressIterator;
-use indicatif::ProgressIterator;
-use priority_queue::PriorityQueue;
 use std::collections::VecDeque;
-
-use rayon::iter::IntoParallelRefIterator;
-use rayon::iter::ParallelIterator;
-use std::cmp::Reverse;
 
 use crate::register_day;
 
 struct Button {
+    #[allow(dead_code)]
     positions: Vec<u32>,
     value: u32,
 }
@@ -31,6 +25,7 @@ impl Button {
 struct Machine {
     target: u32,
     buttons: Vec<Button>,
+    #[allow(dead_code)]
     joltages: Vec<u32>,
 }
 
@@ -121,70 +116,6 @@ fn part1(input: &str) {
         .sum::<u32>();
 
     println!("Day 10 Part 1: {}", sum);
-}
-
-#[allow(dead_code)]
-fn bump_counter(mut counter: Vec<u32>, idxs: &[u32]) -> Vec<u32> {
-    for &i in idxs {
-        unsafe {
-            *counter.get_unchecked_mut(i as usize) += 1;
-        }
-    }
-    counter
-}
-
-#[allow(dead_code)]
-fn chebyshev_distance(a: &[u32], b: &[u32]) -> u32 {
-    a.iter()
-        .zip(b.iter())
-        .map(|(&x, &y)| x.abs_diff(y))
-        .max()
-        .unwrap_or(0)
-}
-
-#[allow(dead_code)]
-fn manhattan_distance(a: &[u32], b: &[u32]) -> u32 {
-    a.iter().zip(b.iter()).map(|(&x, &y)| x.abs_diff(y)).sum()
-}
-
-fn _part2(input: &str) {
-    let machines = parse_input(input);
-
-    let sum = machines
-        .iter()
-        .progress()
-        .map(|machine| {
-            // (state, presses), presses + distance estimate
-            let mut pq = PriorityQueue::new();
-            let mut visited: HashSet<Vec<u32>> = HashSet::new();
-            for b in &machine.buttons {
-                let state = bump_counter(vec![0; machine.joltages.len()], &b.positions);
-                let priority = 1 + manhattan_distance(&state, &machine.joltages);
-                visited.insert(state.clone());
-                pq.push((state, 1), Reverse(priority));
-            }
-
-            loop {
-                let ((state, presses), Reverse(_)) = pq.pop().unwrap();
-
-                if state == machine.joltages {
-                    return presses; // we've reached the target
-                }
-                if state.iter().zip(&machine.joltages).any(|(a, b)| a > b) {
-                    continue; // we've overshot the target
-                }
-                machine.buttons.iter().for_each(|b| {
-                    let next_state = bump_counter(state.clone(), &b.positions);
-                    let priority = presses + 1 + manhattan_distance(&next_state, &machine.joltages);
-                    if visited.insert(next_state.clone()) {
-                        pq.push((next_state, presses + 1), Reverse(priority));
-                    }
-                });
-            }
-        })
-        .sum::<u32>();
-
-    println!("Day 10 Part 2: {}", sum);
 }
 
 register_day!(2025, 10, part1);
