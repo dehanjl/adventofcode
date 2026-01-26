@@ -1,0 +1,14 @@
+# General
+*.txt
+out/
+
+# Golang
+*.exe
+
+# Kotlin
+.idea/
+*.iml
+
+# Rust
+target/
+Cargo.lock
